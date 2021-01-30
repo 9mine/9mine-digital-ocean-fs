@@ -1,0 +1,62 @@
+image: 
+  repository: dgurevich/9mine-digital-ocean-fs
+  tag: "master"
+  pullPolicy: Always
+
+initContainerImage:
+  repository: 9mine/execfuse-jinja2
+  tag: "master"
+  pullPolicy: Always
+
+securityContext: 
+  privileged: true
+  capabilities:
+    add:
+      - SYS_ADMIN
+
+service:
+  type: ClusterIP
+  port: 3370
+  
+ClusterIPRange:
+  from: 3371
+  to: 3390
+
+description: "DigitalOcean"
+
+fs: |
+    {% filter indent() -%}{% include 'fs.yml'%}
+    {%- endfilter %}
+
+
+profile: |
+    echo --- start of profile loading ---
+    load file2chan
+    load std
+    ndb/cs
+    for host_var in `{ os env } { '{'$host_var'}' }
+    
+    dir = $EXPORT_PATH
+    port = $NINEP_PUBLIC_PORT
+    echo $NINEP_PUBLIC_HOST > /dev/sysname 
+    test -d /mnt/registry || mkdir -p /mnt/registry
+    mount -A tcp!registry!registry /mnt/registry
+    DO_DIR = /tmp/do
+    test -d $DO_DIR || mkdir -p $DO_DIR
+    load mpexpr
+    fs_port = ${expr $NINEP_PUBLIC_PORT 1 +}
+    file2chan $DO_DIR^/do {} {
+        load mpexpr
+        var=${expr 10 rand}
+        echo new id is $var
+        echo hostname is `{os hostname}
+        (do_token) = `{echo ${rget data}} 
+        `{os /bin/bash -c 'mkdir -p /accounts/'^$var}
+        `{os /bin/bash -c 'echo '^$do_token^' > /accounts/'^$var}
+        grid/reglisten -A -r description 'user id is '^$var tcp!*!^$fs_port { export $dir^/^$var & } &
+        fs_port=${expr $fs_port 1 +}
+    }
+        
+    grid/reglisten -A -r description ${quote $NINEP_DESCRIPTION} 'tcp!*!'^$port { export $AWS_DIR & }
+    test -n $status && os pkill -9 emu-g
+    echo --- end of profile loading ---
