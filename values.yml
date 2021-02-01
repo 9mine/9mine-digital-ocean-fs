@@ -51,7 +51,7 @@ profile: |
         echo new id is $var
         echo hostname is `{os hostname}
         (do_token) = `{echo ${rget data}} 
-        `{os /bin/bash -c 'mkdir -p /accounts/'^$var}
+        `{os /bin/bash -c 'mkdir -p /accounts/'}
         `{os /bin/bash -c 'echo '^$do_token^' > /accounts/'^$var}
         grid/reglisten -A -r description 'user id is '^$var tcp!*!^$fs_port { export $dir^/^$var & } &
         fs_port=${expr $fs_port 1 +}
