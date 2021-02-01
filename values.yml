@@ -1,5 +1,5 @@
 image: 
-  repository: dgurevich/9mine-digital-ocean-fs
+  repository: 9mine/9mine-digital-ocean-fs
   tag: "master"
   pullPolicy: Always
 
